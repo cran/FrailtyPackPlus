@@ -1,0 +1,34 @@
+#' FrailtyPackPlus: Shared, Correlated, Additive, and Zero-Inflated Frailty Models
+#'
+#' @description
+#' Fits and compares shared, correlated, additive, zero-inflated promotion cure-rate,
+#' and k-out-of-M one-shot device frailty survival models under Bayesian Markov chain
+#' Monte Carlo (MCMC) and Maximum Likelihood Estimation (MLE) frameworks.
+#'
+#' @details
+#' The \code{FrailtyPackPlus} package brings together comprehensive frailty modeling paradigms:
+#' \itemize{
+#'   \item \strong{Zero-Inflated Promotion Cure-Rate Frailty}: Fits promotion cure-rate models
+#'     with Gamma frailty and flexible activation schemes (minimum, maximum, random)
+#'     via \code{\link{ziprom_fit}}.
+#'   \item \strong{Correlated Frailty Models}: Parametric correlated frailty models for
+#'     bivariate right-censored survival data using Bayesian MCMC and MLE via \code{\link{corrFrailty}}.
+#'   \item \strong{Bayesian Shared Frailty Models}: Shared, additive, multiplicative, and merged
+#'     frailty survival regression models supporting ten baseline hazards and eight frailty families
+#'     via \code{\link{frailty_bayes}}, \code{\link{frailty_mle}}, and \code{\link{frailty_fit}}.
+#'   \item \strong{Reversed Hazard Rate (RHR) Frailty Models}: Shared frailty models for bivariate
+#'     left-censored survival data based on reversed hazard rates via \code{\link{fit_rhr_frailty_bayes}}
+#'     and \code{\link{fit_rhr_frailty_mle}}.
+#'   \item \strong{Additive Shared Frailty Models}: Additive shared frailty regression models for
+#'     bivariate survival data under random right censoring via \code{\link{fit_add_frailty_bayes}}
+#'     and \code{\link{fit_add_frailty_mle}}.
+#'   \item \strong{k-out-of-M One-Shot Devices}: Statistical inference, system reliability, and MTTF
+#'     evaluations for one-shot devices with multiple dependent failure modes under shared gamma frailty
+#'     via \code{\link{oneshot_kofm}} and \code{\link{oneshot_frailty}}.
+#' }
+#'
+#' @docType package
+#' @name FrailtyPackPlus-package
+#' @aliases FrailtyPackPlus
+#' @keywords internal
+"_PACKAGE"

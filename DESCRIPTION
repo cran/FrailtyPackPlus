@@ -1,0 +1,58 @@
+Package: FrailtyPackPlus
+Type: Package
+Title: Shared, Correlated, Additive, and Zero-Inflated Frailty Models
+Version: 0.1.0
+Authors@R: c( person("Shikhar", "Tyagi", email = "shikhar1093tyagi@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0003-1606-0844")))
+Description: Fits and compares shared, correlated, additive, zero-inflated promotion
+    cure-rate, and k-out-of-M one-shot device frailty survival models under Bayesian
+    Markov chain Monte Carlo (MCMC) and Maximum Likelihood Estimation (MLE) frameworks.
+    Supports ten baseline hazard distributions (Weibull, Exponential, Generalized
+    Exponential, Exponential Power, Linear Failure Rate, Generalized Log-Logistic,
+    Generalized Weibull, Generalized Rayleigh, Weighted Exponential, Extended Weibull)
+    and eight frailty distributions (Gamma, Inverse Gaussian, Positive Stable,
+    Compound Poisson, Compound Negative Binomial, Generalized Lindley, Weighted Lindley,
+    Mixture of Inverse Gaussians). Implements reversed hazard rate (RHR) models for
+    bivariate left-censored survival data, additive shared frailty models under
+    random right censoring, and one-shot device reliability analysis. Provides
+    goodness-of-fit testing, information criteria (AIC, BIC, AICc, HQIC, DIC, EAIC,
+    EBIC, LPML), convergence diagnostics (Geweke, Gelman-Rubin, Heidelberger-Welch),
+    Bayes factors, residual analyses, and diagnostic visualizations. Methodologies are
+    based on Hanagal and Dabade (2013) <doi:10.1016/j.spl.2013.07.015>, Hanagal and
+    Dabade (2013) <doi:10.1080/03610918.2012.661909>, Hanagal and Dabade (2015)
+    <doi:10.1080/03610926.2013.804561>, Hanagal and Bhambure (2015)
+    <doi:10.3233/MAS-140308>, Hanagal and Bhambure (2016)
+    <doi:10.1080/03610926.2014.901380>, Hanagal, Pandey, and Ganguly (2017)
+    <doi:10.1080/03610918.2015.1085559>, Hanagal and Pandey (2018)
+    <doi:10.1080/03610926.2018.1549256>, Hanagal (2020)
+    <doi:10.1080/03610926.2020.1736305>, Tyagi et al. (2021)
+    <doi:10.1007/s40314-021-01666-5>, Pandey, Hanagal, Tyagi, and Gupta (2021)
+    <doi:10.1142/S0218539321500406>, Tyagi, Pandey, and Chesneau (2022)
+    <doi:10.1007/s42519-021-00241-9>, Pandey, Hanagal, and Tyagi (2022)
+    <doi:10.2478/stattrans-2022-0048>, Tyagi, Pandey, and Chesneau (2022)
+    <doi:10.1007/s13571-022-00278-1>, Tyagi, Pandey, Hanagal, and Chesneau (2024)
+    <doi:10.1080/03610918.2024.2391874>, Kiprotich et al. (2025)
+    <doi:10.1080/02664763.2025.2560510>, Assuncao et al. (2026)
+    <doi:10.1002/bimj.70162>, Chen et al. (1999) <doi:10.1080/01621459.1999.10474198>,
+    Dunn and Smyth (1996) <doi:10.1080/10618600.1996.10474708>, Ling et al. (2021)
+    <doi:10.3390/math9233032>, Yu, So, and Balakrishnan (2025)
+    <doi:10.1016/B978-0-44-331694-4.00006-2>, Balakrishnan, Ling, and So (2021,
+    ISBN:978-1-119-77795-3), and McGilchrist and Aisbett (1991)
+    <doi:10.2307/2532138>.
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+ByteCompile: true
+Depends: R (>= 4.0.0)
+Imports: graphics, grDevices, MASS, methods, numDeriv, stats, survival,
+        utils
+Suggests: testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Language: en-US
+RoxygenNote: 7.3.3
+NeedsCompilation: no
+Packaged: 2026-10-15 22:59:12 UTC; shikhar tyagi
+Author: Shikhar Tyagi [aut, cre] (ORCID:
+    <https://orcid.org/0000-0003-1606-0844>)
+Maintainer: Shikhar Tyagi <shikhar1093tyagi@gmail.com>
+Repository: CRAN
+Date/Publication: 2026-10-27 14:30:02 UTC

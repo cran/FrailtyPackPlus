@@ -1,0 +1,189 @@
+#' Simulate Bivariate Survival Data under Additive Shared Frailty Models
+#'
+#' Generates synthetic bivariate survival data with random right censoring
+#' according to the additive shared frailty model specifications described in
+#' Pandey et al. (2022) and Tyagi et al. (2024).
+#'
+#' @param n Number of bivariate observations (subjects/clusters) to generate.
+#' @param beta Numeric vector of regression coefficients (e.g. \code{c(0.15)}).
+#' @param X Optional covariate matrix of dimensions \code{n x length(beta)}. If \code{NULL},
+#'   a single binary covariate is generated from \code{rbinom(n, size = 1, prob = 0.6)}.
+#' @param frailty_type Character string specifying the frailty distribution:
+#'   \code{"genlindley"} (Generalized Lindley), \code{"wlindley"} (Weighted Lindley),
+#'   \code{"gamma"} (Gamma), or \code{"invgaussian"} (Inverse Gaussian).
+#' @param baseline_dist Character string specifying the baseline distribution:
+#'   \code{"gw"} (Generalized Weibull) or \code{"gll2"} (Generalized Log-Logistic Type-II).
+#' @param frailty_params Named or unnamed numeric vector of frailty parameters:
+#'   \code{c(theta, mu)} for \code{"genlindley"}, \code{c(s_param)} for \code{"wlindley"},
+#'   or \code{c(theta)} for \code{"gamma"}/\code{"invgaussian"}.
+#' @param baseline_params1 Numeric vector of baseline parameters \code{c(zeta1, delta1, xi1)} for component 1.
+#' @param baseline_params2 Numeric vector of baseline parameters \code{c(zeta2, delta2, xi2)} for component 2.
+#' @param censor_type Character string specifying censoring distribution:
+#'   \code{"exponential"} or \code{"gamma"}.
+#' @param censor_param Numeric parameter for censoring distribution (rate for exponential; rate for gamma).
+#' @param seed Optional integer random seed for reproducibility.
+#'
+#' @return A data frame containing:
+#' \describe{
+#'   \item{id}{Subject identifier (1 to n).}
+#'   \item{t1}{Observed survival time for component 1.}
+#'   \item{delta1}{Censoring indicator for component 1 (1 = event, 0 = censored).}
+#'   \item{t2}{Observed survival time for component 2.}
+#'   \item{delta2}{Censoring indicator for component 2 (1 = event, 0 = censored).}
+#'   \item{w}{Generated true frailty values.}
+#'   \item{covariates}{Covariate columns.}
+#' }
+#'
+#' @export
+#' @references
+#' Pandey, A., Hanagal, D. D., and Tyagi, S. (2022). Generalised Lindley shared
+#' additive frailty regression model for bivariate survival data.
+#' \emph{Statistics in Transition new series}, 23(4), 161-176.
+#' \doi{10.2478/stattrans-2022-0048}
+#'
+#' Tyagi, S., Pandey, A., Hanagal, D. D., and Chesneau, C. (2024). A study on
+#' comparisons of additive regression frailty models to counter heterogeneity:
+#' Bayesian strategies and case study. \emph{Communications in Statistics -
+#' Simulation and Computation}. \doi{10.1080/03610918.2024.2391874}
+#'
+#' @examples
+#' # Simulate 50 observations from Generalized Lindley + GW additive frailty model
+#' sim_data <- sim_add_frailty(n = 50, beta = 0.15, frailty_type = "genlindley",
+#'                            baseline_dist = "gw", frailty_params = c(theta = 2.8, mu = 1.5),
+#'                            baseline_params1 = c(zeta = 22.5, delta = 0.013, xi = 0.35),
+#'                            baseline_params2 = c(zeta = 22.5, delta = 0.013, xi = 0.33),
+#'                            seed = 42)
+#' head(sim_data)
+sim_add_frailty <- function(n = 50,
+                            beta = 0.15,
+                            X = NULL,
+                            frailty_type = c("genlindley", "wlindley", "gamma", "invgaussian"),
+                            baseline_dist = c("gw", "gll2"),
+                            frailty_params = NULL,
+                            baseline_params1 = NULL,
+                            baseline_params2 = NULL,
+                            censor_type = c("exponential", "gamma"),
+                            censor_param = 0.1,
+                            seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  frailty_type <- match.arg(frailty_type)
+  baseline_dist <- match.arg(baseline_dist)
+  censor_type <- match.arg(censor_type)
+
+  # Default parameter sets matching paper simulations if not supplied
+  if (is.null(frailty_params)) {
+    if (frailty_type == "genlindley") frailty_params <- c(theta = 2.8, mu = 1.5)
+    else if (frailty_type == "wlindley") frailty_params <- c(s_param = 1.5)
+    else frailty_params <- c(theta = 1.0)
+  }
+
+  if (is.null(baseline_params1)) {
+    if (baseline_dist == "gw") baseline_params1 <- c(zeta = 2.0, delta = 0.05, xi = 0.65)
+    else baseline_params1 <- c(zeta = 3.9, delta = 0.05, xi = 1.2)
+  }
+  if (is.null(baseline_params2)) {
+    if (baseline_dist == "gw") baseline_params2 <- c(zeta = 2.7, delta = 0.06, xi = 0.67)
+    else baseline_params2 <- c(zeta = 4.7, delta = 0.06, xi = 0.9)
+  }
+
+  # Generate covariates
+  if (is.null(X)) {
+    X <- matrix(stats::rbinom(n, size = 1, prob = 0.6), ncol = length(beta))
+    colnames(X) <- paste0("x", seq_len(ncol(X)))
+  } else {
+    X <- as.matrix(X)
+  }
+
+  lin_pred <- as.vector(X %*% beta)
+  rho <- exp(lin_pred)
+
+  # Generate Frailties
+  w <- numeric(n)
+  if (frailty_type == "genlindley") {
+    theta <- frailty_params[1]
+    mu <- frailty_params[2]
+    eta <- theta * (1 + theta - mu)
+    mix_p <- theta / (1 + theta)
+    u_mix <- stats::runif(n)
+    is_comp1 <- (u_mix < mix_p)
+    w[is_comp1] <- stats::rgamma(sum(is_comp1), shape = mu, rate = theta)
+    w[!is_comp1] <- stats::rgamma(sum(!is_comp1), shape = eta, rate = theta)
+  } else if (frailty_type == "wlindley") {
+    s_par <- frailty_params[1]
+    c_val <- sqrt(s_par * (s_par + 1))
+    mix_p <- c_val / (c_val + s_par)
+    u_mix <- stats::runif(n)
+    is_comp1 <- (u_mix < mix_p)
+    w[is_comp1] <- stats::rgamma(sum(is_comp1), shape = s_par, rate = c_val)
+    w[!is_comp1] <- stats::rgamma(sum(!is_comp1), shape = s_par + 1, rate = c_val)
+  } else if (frailty_type == "gamma") {
+    theta <- frailty_params[1]
+    w <- stats::rgamma(n, shape = 1 / theta, rate = 1 / theta)
+  } else if (frailty_type == "invgaussian") {
+    theta <- frailty_params[1]
+    # Standard inverse Gaussian simulation
+    nu <- stats::rnorm(n)
+    y_var <- nu^2
+    x_var <- 1 + (y_var / (2 / theta)) - sqrt(4 * 1 * (y_var / (1/theta)) + (y_var / (1/theta))^2) / (2 / theta)
+    u_ig <- stats::runif(n)
+    w <- ifelse(u_ig <= 1 / (1 + x_var), x_var, 1 / x_var)
+  }
+
+  # Generate survival times T1 and T2
+  t1_true <- numeric(n)
+  t2_true <- numeric(n)
+
+  zeta1 <- baseline_params1[1]; delta1 <- baseline_params1[2]; xi1 <- baseline_params1[3]
+  zeta2 <- baseline_params2[1]; delta2 <- baseline_params2[2]; xi2 <- baseline_params2[3]
+
+  u1 <- stats::runif(n)
+  u2 <- stats::runif(n)
+
+  for (i in seq_len(n)) {
+    wi <- w[i]
+    rho_i <- rho[i]
+
+    # Target: cumh(t) + w * rho * t = -log(u)
+    target1 <- -log(u1[i])
+    target2 <- -log(u2[i])
+
+    root_fn1 <- function(t) {
+      ch <- if (baseline_dist == "gw") cumh_gw(t, delta1, zeta1, xi1) else cumh_gll2(t, delta1, zeta1, xi1)
+      ch + wi * rho_i * t - target1
+    }
+    root_fn2 <- function(t) {
+      ch <- if (baseline_dist == "gw") cumh_gw(t, delta2, zeta2, xi2) else cumh_gll2(t, delta2, zeta2, xi2)
+      ch + wi * rho_i * t - target2
+    }
+
+    t1_true[i] <- tryCatch(stats::uniroot(root_fn1, lower = 1e-6, upper = 1e5)$root, error = function(e) stats::rexp(1, rate = 0.05))
+    t2_true[i] <- tryCatch(stats::uniroot(root_fn2, lower = 1e-6, upper = 1e5)$root, error = function(e) stats::rexp(1, rate = 0.05))
+  }
+
+  # Generate censoring times
+  if (censor_type == "exponential") {
+    c1 <- stats::rexp(n, rate = censor_param)
+    c2 <- stats::rexp(n, rate = censor_param)
+  } else {
+    c1 <- stats::rgamma(n, shape = 0.9, rate = censor_param)
+    c2 <- stats::rgamma(n, shape = 0.9, rate = censor_param)
+  }
+
+  t1_obs <- pmin(t1_true, c1)
+  delta1_obs <- as.integer(t1_true < c1)
+
+  t2_obs <- pmin(t2_true, c2)
+  delta2_obs <- as.integer(t2_true < c2)
+
+  res_df <- data.frame(
+    id = seq_len(n),
+    t1 = t1_obs,
+    delta1 = delta1_obs,
+    t2 = t2_obs,
+    delta2 = delta2_obs,
+    w = w,
+    X,
+    stringsAsFactors = FALSE
+  )
+  res_df
+}
